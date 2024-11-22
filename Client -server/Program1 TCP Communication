@@ -1,0 +1,80 @@
+//Client - Server chat application . Here Client send the message and Server have a set of questions respond accordingly 
+ClientProgram:
+Code:
+import java.io.*;
+import java.net.*;
+public class ChatClient1 {
+    public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("192.168.71.55", 24);
+            System.out.println("Connected to server.");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+            String userInput;
+            String serverResponse;
+            while ((userInput = consoleInput.readLine()) != null) {
+                out.println(userInput);
+                if (userInput.equals("@")) {
+                    break;
+                }
+                serverResponse = in.readLine();
+                System.out.println("Server: " + serverResponse);
+                if (serverResponse.equals("@")) {
+                    break;
+                }
+            }
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+ServerProgram:
+Code:
+import java.io.*;
+import java.net.*;
+public class ChatServer1 {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(45);
+            System.out.println("Server started. Waiting for clients...");
+            Socket socket = serverSocket.accept();
+            System.out.println("Client connected.");
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+            String clientInput;
+            String serverResponse;
+            while ((clientInput = in.readLine()) != null) {
+                System.out.println("Client: " + clientInput);
+                if (clientInput.equals("@")) {
+                    break;
+                }
+                if (clientInput.equalsIgnoreCase("Hi")) {
+                    serverResponse = "Hello";
+                }
+               else if (clientInput.equalsIgnoreCase(" How are you?")) {
+                    serverResponse = "I am fine";
+                }
+                 else if (clientInput.equalsIgnoreCase("What is your name?")) {
+                    serverResponse = "My name is ChatServer.";
+                }
+                else {
+                    serverResponse = "Sorry, I didn't understand your question.";
+                }
+                System.out.println("Server: " + serverResponse);
+                out.println(serverResponse);
+                if (clientInput.equals("@") || serverResponse.equals("@")) {
+                    break;
+                }
+            }
+            socket.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
