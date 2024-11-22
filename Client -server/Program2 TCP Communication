@@ -1,0 +1,68 @@
+//Client - Server Communication : Chat Application Client Send the Message and Server accept and Send the response accordingly
+Client Side:
+Code:
+import java.io.*;
+import java.net.*;
+public class ChatClient {
+    public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("localhost", 1234);
+            System.out.println("Connected to server.");
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));   //Read input from the server
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);     
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in)); //Read input from the user consoles
+            String userInput;
+            String serverResponse;
+            while ((userInput = consoleInput.readLine()) != null) {
+                out.println(userInput);
+                if (userInput.equals("@")) {
+                    break;
+                }
+                serverResponse = in.readLine();
+                System.out.println("Server: " + serverResponse);
+
+                if (serverResponse.equals("@")) {
+                    break;
+                }
+            }
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+Server Side:
+Code:
+import java.io.*;
+import java.net.*;
+public class ChatServer {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(1234);
+            System.out.println("Server started. Waiting for clients...");
+            Socket socket = serverSocket.accept();
+            System.out.println("Client connected.");
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); //Read input from client
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+            String clientInput;
+            String serverResponse;
+            while ((clientInput = in.readLine()) != null) {
+                System.out.println("Client: " + clientInput);
+                if (clientInput.equals("@")) {
+                    break;
+                }
+                System.out.print("Server: ");
+                serverResponse = consoleInput.readLine();
+                out.println(serverResponse);
+                if (serverResponse.equals("@")) {
+                    break;
+                }
+            }
+            socket.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
