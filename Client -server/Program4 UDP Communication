@@ -1,0 +1,81 @@
+Client - Server code using UDP way communication : Here They not bother about whether the message is sent or not
+Clide Side:
+Code:
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.Scanner;
+public class SimpleUDPClient {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket clientSocket = new DatagramSocket();
+            InetAddress IPAddress = InetAddress.getByName("localhost");
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                System.out.print("Enter student's name (or type 'stop' to end): ");
+                String studentName = scanner.nextLine();
+                if (studentName.equalsIgnoreCase("stop")) {
+                    byte[] stopMessage = "stop".getBytes();
+                    DatagramPacket stopPacket = new DatagramPacket(stopMessage, stopMessage.length, IPAddress, 9876);
+                    clientSocket.send(stopPacket);
+                    System.out.println("Process stopped by client.");
+                    break;
+                }
+                System.out.print("Enter marks separated by commas: ");
+                String marks = scanner.nextLine();
+                String message = studentName + ": " + marks;
+                byte[] sendData = message.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
+                clientSocket.send(sendPacket);
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(receivePacket);
+                String response = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.println("Server says: " + response);
+            }
+            clientSocket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+Server Side:
+Code:
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+public class SimpleUDPServer {
+    public static void main(String[] args) {
+        try {
+            DatagramSocket serverSocket = new DatagramSocket(9876);
+            byte[] receiveData = new byte[1024];
+            byte[] sendData;
+            System.out.println("Server is ready...");
+            while (true) {
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                serverSocket.receive(receivePacket);
+                String receivedMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.println("Client says: " + receivedMessage);
+                if (receivedMessage.trim().equalsIgnoreCase("stop")) {
+                    System.out.println("Client has stopped the process. Server is shutting down.");
+                    break;
+                }
+                // Splitting the received message to extract student name and marks
+                String[] parts = receivedMessage.split(":");
+                String studentName = parts[0].trim();
+                String[] marksArray = parts[1].trim().split(",");
+                int sum = 0;
+                for (String mark : marksArray) {
+                    sum += Integer.parseInt(mark.trim());
+                }
+                int average = sum / marksArray.length;
+                String response = "Student: " + studentName + ", Average: " + average;
+                sendData = response.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                serverSocket.send(sendPacket);
+            }
+            serverSocket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
